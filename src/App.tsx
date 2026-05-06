@@ -1,10 +1,8 @@
 
-
+import {ListingPage} from "./features/listings"
 function App() {
   return (
-    <div>
-      <h1 className="font-bold font-size-lg">Hello world!</h1>
-    </div>
+    <ListingPage/>
   )
 }
 
