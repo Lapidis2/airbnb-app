@@ -1,35 +1,50 @@
-import { useState } from "react";
-import { listings } from "../../../data/listings";
+import { useMemo, useState } from "react";
+import { useStore } from "../../../store/StoreContext";
+import { useListings } from "../hooks/useListings";
+import { useFavorites } from "../hooks/useFavorites";
 import SearchBar from "../components/SearchBar";
 import SavedBadge from "../components/SavedBadge";
 import ListingCard from "../components/ListingCard";
-import "../components/ListingCard.css";
+import SavedListings from "../components/SavedListings";
+import Spinner from "../../../shared/components/Spinner";
+import "./ListingsPage.css";
+
 export default function ListingsPage() {
-  const [query, setQuery] = useState("");
-  const [saved, setSaved] = useState<number[]>([]);
-  const [savedOnly, setSaveOnly] = useState(false);
-  const toggleSave = (id: number) => {
-    setSaved((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
-    );
-  };
-  const filtered = listings
-    .filter((item) =>
-      `${item.title} ${item.location}`
-        .toLocaleLowerCase()
-        .includes(query.toLocaleLowerCase()),
-    )
-    .filter((item) => (savedOnly ? saved.includes(item.id) : true));
+  const { state, dispatch } = useStore();
+  const { toggle, isSaved } = useFavorites();
+  const [showSavedPanel, setShowSavedPanel] = useState(false);
+
+  useListings();
+
+  const filtered = useMemo(() => {
+    return state.listings
+      .filter((item) =>
+        `${item.title} ${item.location}`
+          .toLowerCase()
+          .includes(state.filter.toLowerCase())
+      )
+      .filter((item) => (!state.showSavedOnly || isSaved(item.id)));
+  }, [state.listings, state.filter, state.showSavedOnly, isSaved]);
+
+  if (state.loading) {
+    return <Spinner />;
+  }
+
   return (
     <div className="container">
       <header>
-        <SearchBar value={query} onChange={setQuery} />
-        <SavedBadge count={saved.length} />
-        <button onClick={() => setSaveOnly(!savedOnly)}>
-          {savedOnly ? "Show All" : "Show Saved"}
-        </button>
+        <SearchBar />
+        <div className="header-right">
+          <SavedBadge />
+          <button onClick={() => setShowSavedPanel(true)}>
+            View Saved
+          </button>
+          <button onClick={() => dispatch({ type: 'TOGGLE_SHOW_SAVED_ONLY' })}>
+            {state.showSavedOnly ? "Show All" : "Show Saved"}
+          </button>
+        </div>
       </header>
-      <p>{filtered.length}results are found</p>
+      <p>{filtered.length} results are found</p>
       {filtered.length === 0 ? (
         <p>No listings match your search</p>
       ) : (
@@ -38,12 +53,16 @@ export default function ListingsPage() {
             <ListingCard
               key={listing.id}
               listing={listing}
-              saved={saved.includes(listing.id)}
-              onToggleSave={() => toggleSave(listing.id)}
+              saved={isSaved(listing.id)}
+              onToggleSave={() => toggle(listing.id, listing.title)}
             />
           ))}
         </div>
       )}
+      <SavedListings
+        isOpen={showSavedPanel}
+        onClose={() => setShowSavedPanel(false)}
+      />
     </div>
   );
 }
