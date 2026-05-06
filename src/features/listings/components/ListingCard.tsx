@@ -23,7 +23,9 @@ export default function ListingCard({ listing, saved, onToggleSave }: props) {
         <button onClick={onToggleSave}>
            {saved ? <FaHeart /> : <FaRegHeart />}
         </button>
+        <p className="title">{listing.title}</p>
        <div className="card-items">
+        
          <p>
       
          
