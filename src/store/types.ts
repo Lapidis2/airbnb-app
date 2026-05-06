@@ -13,4 +13,5 @@ export type Action =
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_FILTER'; payload: string }
   | { type: 'TOGGLE_FAVORITE'; payload: number }
-  | { type: 'TOGGLE_SHOW_SAVED_ONLY' };
+  | { type: 'TOGGLE_SHOW_SAVED_ONLY' }
+  | { type: 'RESET' };

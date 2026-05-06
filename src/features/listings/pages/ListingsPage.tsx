@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
+
 import { useStore } from "../../../store/StoreContext";
 import { useListings } from "../hooks/useListings";
 import { useFavorites } from "../hooks/useFavorites";
@@ -15,6 +16,10 @@ export default function ListingsPage() {
   const [showSavedPanel, setShowSavedPanel] = useState(false);
 
   useListings();
+
+  const handleToggleSave = useCallback((id: number, title: string) => {
+    toggle(id, title);
+  }, [toggle]);
 
   const filtered = useMemo(() => {
     return state.listings
@@ -42,6 +47,9 @@ export default function ListingsPage() {
           <button onClick={() => dispatch({ type: 'TOGGLE_SHOW_SAVED_ONLY' })}>
             {state.showSavedOnly ? "Show All" : "Show Saved"}
           </button>
+          <button onClick={() => dispatch({ type: 'RESET' })}>
+            Clear All
+          </button>
         </div>
       </header>
       <p>{filtered.length} results are found</p>
@@ -54,7 +62,7 @@ export default function ListingsPage() {
               key={listing.id}
               listing={listing}
               saved={isSaved(listing.id)}
-              onToggleSave={() => toggle(listing.id, listing.title)}
+              onToggleSave={() => handleToggleSave(listing.id, listing.title)}
             />
           ))}
         </div>

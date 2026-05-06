@@ -17,6 +17,8 @@ export function reducer(state: State, action: Action): State {
       };
     case 'TOGGLE_SHOW_SAVED_ONLY':
       return { ...state, showSavedOnly: !state.showSavedOnly };
+    case 'RESET':
+      return { ...state, filter: '', saved: [] };
     default:
       return state;
   }

@@ -1,5 +1,7 @@
+import { memo } from "react";
 import clsx from "clsx";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import type { Listing } from "../types";
 import { FaHeart, FaRegHeart, FaStar, FaMapMarkedAlt } from "react-icons/fa";
 import { format } from "date-fns";
@@ -11,21 +13,25 @@ interface props {
   onToggleSave: () => void;
 }
 
-export default function ListingCard({ listing, saved, onToggleSave }: props) {
+function ListingCard({ listing, saved, onToggleSave }: props) {
+  const navigate = useNavigate();
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
+      onClick={() => navigate(`/listings/${listing.id}`)}
       className={clsx(styles.card, {
         [styles.saved]: saved,
         [styles.luxury]: listing.price > 300,
         [styles.booked]: !listing.available,
         [styles.superhost]: listing.superhost,
       })}
+      style={{ cursor: 'pointer' }}
     >
         <img src={listing.img} alt={listing.title}/>
-        <button onClick={onToggleSave}>
-           {saved ? <FaHeart /> : <FaRegHeart />}
+        <button onClick={(e) => { e.stopPropagation(); onToggleSave(); }}>
+            {saved ? <FaHeart /> : <FaRegHeart />}
         </button>
         <p className={styles.title}>{listing.title}</p>
        <div className={styles.cardItems}>
@@ -58,3 +64,5 @@ export default function ListingCard({ listing, saved, onToggleSave }: props) {
     </motion.div>
   );
 }
+
+export default memo(ListingCard);

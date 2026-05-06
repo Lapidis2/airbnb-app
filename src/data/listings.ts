@@ -73,4 +73,17 @@ export const listings: Listing[] = [
     img: 'https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=400&h=260&fit=crop',
     category: 'city',
   },
+  // Add more listings to reach 50
+  ...Array.from({ length: 44 }, (_, i) => ({
+    id: 7 + i,
+    title: `Listing ${7 + i}`,
+    location: `Location ${7 + i}`,
+    price: 100 + i * 10,
+    rating: 4.0 + (i % 10) * 0.1,
+    superhost: i % 5 === 0,
+    available: i % 3 !== 0,
+    availableFrom: `2025-${String(1 + (i % 12)).padStart(2, '0')}-01`,
+    img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&h=260&fit=crop',
+    category: ['beach', 'mountain', 'city', 'countryside'][i % 4] as any,
+  })),
 ];
