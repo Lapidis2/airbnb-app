@@ -22,7 +22,7 @@ export default function BookingForm({ listingId, onClose }: BookingFormProps) {
       case 2:
         return <StepPayment key={2} onNext={(data: StepPaymentData) => next(data)} onBack={back} initialData={bookingData} />;
       case 3:
-        return <StepConfirmation key={3} bookingData={bookingData as any} listingId={listingId} onBack={back} />;
+        return <StepConfirmation key={3} bookingData={bookingData as any} listingId={listingId} onBack={back} onClose={onClose} />;
       default:
         return <StepDates key={0} onNext={(data: StepDatesData) => next(data)} initialData={bookingData} />;
     }

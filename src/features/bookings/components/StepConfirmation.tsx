@@ -6,9 +6,10 @@ interface StepConfirmationProps {
   bookingData: StepDatesData & StepPersonalData & StepPaymentData;
   listingId: number;
   onBack: () => void;
+  onClose: () => void;
 }
 
-export default function StepConfirmation({ bookingData, listingId, onBack }: StepConfirmationProps) {
+export default function StepConfirmation({ bookingData, listingId, onBack, onClose }: StepConfirmationProps) {
   const mutation = useMutation({
     mutationFn: async (data: typeof bookingData & { listingId: number }) => {
       // Simulate API call
@@ -17,10 +18,14 @@ export default function StepConfirmation({ bookingData, listingId, onBack }: Ste
       return { success: true };
     },
     onSuccess: () => {
-      toast.success('Booking confirmed! welcome to your new home!', {
-        duration: 5000,
+      toast.success('Booking confirmed! welcome to your new Home!', {
+        duration: 3000,
         position: 'top-center',
       });
+      // Auto-close modal after toast is shown
+      setTimeout(() => {
+        onClose();
+      }, 3500);
     },
   });
 
@@ -40,33 +45,51 @@ export default function StepConfirmation({ bookingData, listingId, onBack }: Ste
       }}>
         <h4 style={{ margin: '0 0 15px 0', color: '#333' }}>Booking Summary</h4>
         <div style={{ display: 'grid', gap: '8px' }}>
-          <p><strong>📅 Check-in:</strong> {bookingData.checkIn}</p>
-          <p><strong>📅 Check-out:</strong> {bookingData.checkOut}</p>
-          <p><strong>👥 Guests:</strong> {bookingData.guests}</p>
-          <p><strong>👤 Name:</strong> {bookingData.name}</p>
-          <p><strong>📧 Email:</strong> {bookingData.email}</p>
-          <p><strong>📞 Phone:</strong> {bookingData.phone}</p>
-          <p><strong>💳 Card:</strong> **** **** **** {bookingData.card.slice(-4)}</p>
+          <p><strong> Check-in:</strong> {bookingData.checkIn}</p>
+          <p><strong> Check-out:</strong> {bookingData.checkOut}</p>
+          <p><strong> Guests:</strong> {bookingData.guests}</p>
+          <p><strong> Name:</strong> {bookingData.name}</p>
+          <p><strong> Email:</strong> {bookingData.email}</p>
+          <p><strong> Phone:</strong> {bookingData.phone}</p>
+          <p><strong> Card:</strong> **** **** **** {bookingData.card.slice(-4)}</p>
         </div>
       </div>
+      {mutation.isPending && (
+        <div style={{
+          textAlign: 'center',
+          padding: '20px',
+          background: '#e8f5e8',
+          borderRadius: '8px',
+          marginBottom: '20px',
+          border: '1px solid #c3e6c3'
+        }}>
+          <div style={{ fontSize: '18px', marginBottom: '10px' }}>🔄 Processing your booking...</div>
+          <div style={{ color: '#666' }}>Please wait while we confirm your reservation</div>
+        </div>
+      )}
       <div style={{ display: 'flex', gap: '15px', justifyContent: 'space-between', marginTop: '20px' }}>
         <button
           type="button"
           onClick={onBack}
+          disabled={mutation.isPending}
           style={{
             flex: 1,
             padding: '12px 20px',
-            background: '#6c757d',
+            background: mutation.isPending ? '#ccc' : '#6c757d',
             color: 'white',
             border: 'none',
             borderRadius: '8px',
-            cursor: 'pointer',
+            cursor: mutation.isPending ? 'not-allowed' : 'pointer',
             fontSize: '16px',
             fontWeight: '600',
             transition: 'background-color 0.2s'
           }}
-          onMouseOver={(e) => e.currentTarget.style.background = '#5a6268'}
-          onMouseOut={(e) => e.currentTarget.style.background = '#6c757d'}
+          onMouseOver={(e) => {
+            if (!mutation.isPending) e.currentTarget.style.background = '#5a6268'
+          }}
+          onMouseOut={(e) => {
+            if (!mutation.isPending) e.currentTarget.style.background = '#6c757d'
+          }}
         >
           ← Back
         </button>
