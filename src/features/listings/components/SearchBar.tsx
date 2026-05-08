@@ -1,22 +1,25 @@
 import { useRef, useEffect } from "react"
 import { FaSearch } from "react-icons/fa"
-import { useStore } from "../../../store/StoreContext"
 import debounce from "lodash/debounce"
 
-function SearchBar() {
-    const { state, dispatch } = useStore()
+interface SearchBarProps {
+  value: string;
+  onChange: (value: string) => void;
+}
+
+function SearchBar({ value, onChange }: SearchBarProps) {
     const inputRef = useRef<HTMLInputElement>(null)
 
     useEffect(() => {
         inputRef.current?.focus()
     }, [])
 
-    const debouncedDispatch = debounce((value: string) => {
-        dispatch({ type: 'SET_FILTER', payload: value })
+    const debouncedChange = debounce((newValue: string) => {
+        onChange(newValue)
     }, 300)
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        debouncedDispatch(e.target.value)
+        debouncedChange(e.target.value)
     }
 
   return (
@@ -25,7 +28,7 @@ function SearchBar() {
     <input
         ref={inputRef}
         type="text"
-        defaultValue={state.filter}
+        defaultValue={value}
         onChange={handleChange}
         placeholder="Search listings..."
     />

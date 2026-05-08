@@ -1,13 +1,13 @@
-import { useStore } from '../../../store/StoreContext';
+import { useSaved } from '../../listings/hooks/useSaved';
 
 export default function DashboardPage() {
-  const { state } = useStore();
+  const { data: saved = [] } = useSaved();
 
   return (
     <div className="dashboard">
       <h1>Dashboard</h1>
       <p>Welcome to your dashboard!</p>
-      <p>You have {state.saved.length} saved listings.</p>
+      <p>You have {saved.length} saved listings.</p>
     </div>
   );
 }

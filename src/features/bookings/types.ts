@@ -1,0 +1,1 @@
+// Booking types if needed in the future
