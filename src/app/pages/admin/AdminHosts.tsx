@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { Search, Filter, ChevronDown, Star, Home, Shield, MoreVertical, CheckCircle, XCircle, AlertCircle, Eye } from 'lucide-react';
+import { toast } from 'sonner';
 import { Pagination } from '../../components/shared/Pagination';
 import { usePagination } from '../../components/shared/usePagination';
+import { ConfirmModal } from '../../components/shared/ConfirmModal';
 
 type HostStatus = 'superhost' | 'active' | 'pending' | 'suspended';
 
@@ -29,6 +31,7 @@ export function AdminHosts() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<HostStatus | 'all'>('all');
   const [selectedHost, setSelectedHost] = useState<HostItem | null>(null);
+  const [actionModal, setActionModal] = useState<{ host: HostItem; action: 'approve' | 'suspend' | 'reinstate' } | null>(null);
 
   const filtered = hosts.filter(h => {
     if (statusFilter !== 'all' && h.status !== statusFilter) return false;
@@ -227,17 +230,26 @@ export function AdminHosts() {
             </div>
             <div className="flex gap-3">
               {selectedHost.status === 'pending' && (
-                <button className="flex-1 bg-[#FF385C] hover:bg-[#E31C5F] text-white py-2.5 rounded-xl text-sm font-semibold transition-colors">
+                <button
+                  onClick={() => { setActionModal({ host: selectedHost, action: 'approve' }); setSelectedHost(null); }}
+                  className="flex-1 bg-[#FF385C] hover:bg-[#E31C5F] text-white py-2.5 rounded-xl text-sm font-semibold transition-colors"
+                >
                   Approve Host
                 </button>
               )}
               {selectedHost.status === 'suspended' && (
-                <button className="flex-1 bg-green-500 hover:bg-green-600 text-white py-2.5 rounded-xl text-sm font-semibold transition-colors">
+                <button
+                  onClick={() => { setActionModal({ host: selectedHost, action: 'reinstate' }); setSelectedHost(null); }}
+                  className="flex-1 bg-green-500 hover:bg-green-600 text-white py-2.5 rounded-xl text-sm font-semibold transition-colors"
+                >
                   Reinstate Host
                 </button>
               )}
               {(selectedHost.status === 'active' || selectedHost.status === 'superhost') && (
-                <button className="flex-1 border border-red-200 text-red-500 hover:bg-red-50 py-2.5 rounded-xl text-sm font-semibold transition-colors">
+                <button
+                  onClick={() => { setActionModal({ host: selectedHost, action: 'suspend' }); setSelectedHost(null); }}
+                  className="flex-1 border border-red-200 text-red-500 hover:bg-red-50 py-2.5 rounded-xl text-sm font-semibold transition-colors"
+                >
                   Suspend Host
                 </button>
               )}
@@ -248,6 +260,30 @@ export function AdminHosts() {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={!!actionModal}
+        onClose={() => setActionModal(null)}
+        onConfirm={() => {
+          const action = actionModal?.action === 'approve' ? 'approved' : actionModal?.action === 'suspend' ? 'suspended' : 'reinstated';
+          toast.success(`${actionModal?.host.name} has been ${action}`);
+          setActionModal(null);
+        }}
+        title={
+          actionModal?.action === 'approve' ? 'Approve Host' :
+          actionModal?.action === 'suspend' ? 'Suspend Host' : 'Reinstate Host'
+        }
+        message={
+          actionModal?.action === 'approve'
+            ? `Approve ${actionModal?.host.name} as a host? They will be able to list properties and accept bookings.`
+            : actionModal?.action === 'suspend'
+            ? `Suspend ${actionModal?.host.name}? All their listings will be hidden and they won't be able to accept new bookings.`
+            : `Reinstate ${actionModal?.host.name}? Their account will be reactivated and listings will be visible again.`
+        }
+        confirmText={actionModal?.action === 'approve' ? 'Approve' : actionModal?.action === 'suspend' ? 'Suspend' : 'Reinstate'}
+        cancelText="Cancel"
+        type={actionModal?.action === 'suspend' ? 'danger' : 'info'}
+      />
     </div>
   );
 }

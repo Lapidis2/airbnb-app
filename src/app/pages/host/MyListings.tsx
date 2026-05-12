@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { Link } from 'react-router';
 import { Plus, Edit, Trash2, ToggleLeft, ToggleRight, Star, Eye, MapPin } from 'lucide-react';
+import { toast } from 'sonner';
 import { hostListings } from '../../../data/mockData';
+import { ConfirmModal } from '../../components/shared/ConfirmModal';
 
 import img0 from '../../../imports/image.png';
 import img1 from '../../../imports/image-1.png';
@@ -15,6 +17,7 @@ export function MyListings() {
   const [statuses, setStatuses] = useState<Record<string, boolean>>({
     HL1: true, HL2: true, HL3: false
   });
+  const [deleteModal, setDeleteModal] = useState<{ id: string; title: string } | null>(null);
   const toggle = (id: string) => setStatuses(prev => ({ ...prev, [id]: !prev[id] }));
 
   return (
@@ -24,7 +27,7 @@ export function MyListings() {
           <h1 className="text-[#222222] mb-1" style={{ fontFamily: "'Poppins', sans-serif", fontSize: '1.75rem', fontWeight: 700 }}>My Listings</h1>
           <p className="text-[#717171] text-sm">{hostListings.length} active properties</p>
         </div>
-        <Link to="/host/add-listing" className="flex items-center gap-2 bg-[#FF385C] hover:bg-[#E31C5F] text-white px-5 py-2.5 rounded-xl font-semibold text-sm transition-colors">
+        <Link to="/dashboard/add-listing" className="flex items-center gap-2 bg-[#FF385C] hover:bg-[#E31C5F] text-white px-5 py-2.5 rounded-xl font-semibold text-sm transition-colors">
           <Plus className="w-4 h-4" />
           Add Property
         </Link>
@@ -86,7 +89,8 @@ export function MyListings() {
                 <button className="flex-1 flex items-center justify-center gap-1.5 bg-[#F7F7F7] hover:bg-[#EBEBEB] text-[#222222] py-2.5 rounded-xl text-xs font-semibold transition-colors">
                   <Eye className="w-3.5 h-3.5" /> Preview
                 </button>
-                <button className="flex items-center justify-center gap-1.5 bg-red-50 hover:bg-red-100 text-red-500 py-2.5 px-3 rounded-xl text-xs font-semibold transition-colors">
+                <button className="flex items-center justify-center gap-1.5 bg-red-50 hover:bg-red-100 text-red-500 py-2.5 px-3 rounded-xl text-xs font-semibold transition-colors"
+                  onClick={() => setDeleteModal({ id: listing.id, title: listing.title })}>
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </div>
@@ -95,7 +99,7 @@ export function MyListings() {
         ))}
 
         {/* Add New Card */}
-        <Link to="/host/add-listing" className="border-2 border-dashed border-[#DDDDDD] rounded-2xl flex flex-col items-center justify-center p-8 hover:border-[#FF385C] hover:bg-[#FFF8F9] transition-all group min-h-72">
+        <Link to="/dashboard/add-listing" className="border-2 border-dashed border-[#DDDDDD] rounded-2xl flex flex-col items-center justify-center p-8 hover:border-[#FF385C] hover:bg-[#FFF8F9] transition-all group min-h-72">
           <div className="w-14 h-14 bg-[#FFF1F3] rounded-2xl flex items-center justify-center mb-4 group-hover:bg-[#FFE4E8] transition-colors">
             <Plus className="w-7 h-7 text-[#FF385C]" />
           </div>
@@ -103,6 +107,20 @@ export function MyListings() {
           <p className="text-[#717171] text-xs text-center">List a new property and start earning from bookings.</p>
         </Link>
       </div>
+
+      <ConfirmModal
+        isOpen={!!deleteModal}
+        onClose={() => setDeleteModal(null)}
+        onConfirm={() => {
+          toast.success(`${deleteModal?.title} has been deleted`);
+          setDeleteModal(null);
+        }}
+        title="Delete Property"
+        message={`Are you sure you want to delete "${deleteModal?.title}"? This action cannot be undone and all booking history will be lost.`}
+        confirmText="Delete"
+        cancelText="Keep property"
+        type="danger"
+      />
     </div>
   );
 }

@@ -1,12 +1,15 @@
 import { useState } from 'react';
 import { Search, UserPlus, CheckCircle, XCircle, Edit } from 'lucide-react';
+import { toast } from 'sonner';
 import { users } from '../../../data/mockData';
 import { Pagination } from '../../components/shared/Pagination';
 import { usePagination } from '../../components/shared/usePagination';
+import { ConfirmModal } from '../../components/shared/ConfirmModal';
 
 export function AdminUsers() {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
+  const [actionModal, setActionModal] = useState<{ user: any; action: 'suspend' | 'activate' } | null>(null);
 
   const filtered = users.filter(u =>
     (filter === 'all' || u.role === filter || u.status === filter) &&
@@ -122,7 +125,10 @@ export function AdminUsers() {
                       <button className="flex items-center gap-1 text-[#FF385C] text-xs font-medium hover:underline">
                         <Edit className="w-3 h-3" /> Edit
                       </button>
-                      <button className="text-[#717171] text-xs hover:text-red-500 transition-colors">
+                      <button
+                        onClick={() => setActionModal({ user, action: user.status === 'active' ? 'suspend' : 'activate' })}
+                        className="text-[#717171] text-xs hover:text-red-500 transition-colors"
+                      >
                         {user.status === 'active' ? 'Suspend' : 'Activate'}
                       </button>
                     </div>
@@ -148,6 +154,25 @@ export function AdminUsers() {
           />
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={!!actionModal}
+        onClose={() => setActionModal(null)}
+        onConfirm={() => {
+          const action = actionModal?.action === 'suspend' ? 'suspended' : 'activated';
+          toast.success(`${actionModal?.user.name} has been ${action}`);
+          setActionModal(null);
+        }}
+        title={actionModal?.action === 'suspend' ? 'Suspend User' : 'Activate User'}
+        message={
+          actionModal?.action === 'suspend'
+            ? `Are you sure you want to suspend ${actionModal?.user.name}? They will lose access to their account immediately.`
+            : `Are you sure you want to activate ${actionModal?.user.name}? They will regain full access to their account.`
+        }
+        confirmText={actionModal?.action === 'suspend' ? 'Suspend' : 'Activate'}
+        cancelText="Cancel"
+        type={actionModal?.action === 'suspend' ? 'danger' : 'info'}
+      />
     </div>
   );
 }

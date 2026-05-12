@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router';
 import { ArrowLeft, CreditCard, Shield, Check, MapPin, Star, Lock } from 'lucide-react';
+import { toast } from 'sonner';
 import { properties } from '../../data/mockData';
 import { Navbar } from '../components/layout/Navbar';
+import { ConfirmModal } from '../components/shared/ConfirmModal';
 
 const paymentMethods = [
   { id: 'card', label: 'Credit / Debit Card', icons: ['VISA', 'MC', 'AMEX'] },
@@ -20,6 +22,7 @@ export function Checkout() {
   const [cvv, setCvv] = useState('');
   const [cardName, setCardName] = useState('');
   const [confirmed, setConfirmed] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   const nights = 5;
   const subtotal = property.price * nights;
@@ -33,6 +36,7 @@ export function Checkout() {
 
   const handleConfirm = () => {
     setConfirmed(true);
+    toast.success('Payment successful! Booking confirmed.');
     setTimeout(() => navigate('/user/dashboard'), 3000);
   };
 
@@ -264,7 +268,7 @@ export function Checkout() {
                 </div>
 
                 <button
-                  onClick={handleConfirm}
+                  onClick={() => setShowPaymentModal(true)}
                   className="w-full bg-[#FF385C] hover:bg-[#E31C5F] text-white py-4 rounded-xl font-bold transition-colors flex items-center justify-center gap-2"
                   style={{ fontFamily: "'Poppins', sans-serif" }}
                 >
@@ -281,6 +285,17 @@ export function Checkout() {
           </div>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        onConfirm={handleConfirm}
+        title="Confirm Payment"
+        message={`You're about to pay $${total} for ${nights} nights at ${property.title}. This payment will be processed immediately.`}
+        confirmText={`Pay $${total}`}
+        cancelText="Review details"
+        type="info"
+      />
     </div>
   );
 }

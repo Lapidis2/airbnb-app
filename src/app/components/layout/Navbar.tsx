@@ -1,9 +1,11 @@
 import { Search, Menu, User, Globe, X, Check, Sun, Moon, Heart } from 'lucide-react';
 import { Link, useNavigate } from 'react-router';
 import { useState, type MouseEvent } from 'react';
+import { toast } from 'sonner';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { useWishlist } from '../../context/WishlistContext';
+import { ConfirmModal } from '../shared/ConfirmModal';
 
 interface NavbarProps {
   isDashboard?: boolean;
@@ -32,6 +34,7 @@ export function Navbar({ isDashboard = false, transparent = false }: NavbarProps
   const [globeOpen, setGlobeOpen]         = useState(false);
   const [selectedLang, setSelectedLang]   = useState('en');
   const [selectedCurrency, setSelectedCurrency] = useState('USD');
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const navigate = useNavigate();
   const { isDark, toggleTheme } = useTheme();
   const { user, isAuthenticated, logout } = useAuth();
@@ -277,7 +280,7 @@ export function Navbar({ isDashboard = false, transparent = false }: NavbarProps
                       )}
                       <div className={`border-t my-1 ${isDark ? 'border-[#3A3A3C]' : 'border-[#EBEBEB]'}`} />
                       <button
-                        onClick={() => { logout(); setMenuOpen(false); navigate('/'); }}
+                        onClick={() => { setShowLogoutModal(true); setMenuOpen(false); }}
                         className={`w-full text-left flex items-center gap-3 px-4 py-3 text-sm transition-colors ${isDark ? 'text-white/80 hover:bg-white/10' : 'text-[#1C1C1E] hover:bg-[#F7F7F7]'}`}>
                         Logout
                       </button>
@@ -313,6 +316,21 @@ export function Navbar({ isDashboard = false, transparent = false }: NavbarProps
           </div>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={() => {
+          logout();
+          navigate('/');
+          toast.success('Logged out successfully');
+        }}
+        title="Logout Confirmation"
+        message="Are you sure you want to logout? You'll need to sign in again to access your account."
+        confirmText="Logout"
+        cancelText="Stay signed in"
+        type="warning"
+      />
     </nav>
   );
 }

@@ -8,9 +8,10 @@ import {
 import { Navbar } from '../components/layout/Navbar';
 import { HeroSearch } from '../components/shared/HeroSearch';
 import { AISearch } from '../components/shared/AISearch';
-import { properties, testimonials } from '../../data/mockData';
+import { testimonials } from '../../data/mockData';
 import { useWishlist } from '../context/WishlistContext';
 import { useAuth } from '../context/AuthContext';
+import { useListings } from '../../features/listings/hooks';
 
 
 const HERO_MAIN  = "https://images.unsplash.com/photo-1772475329901-58f77a9625ab?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtb2Rlcm4lMjBjb3p5JTIwbGl2aW5nJTIwcm9vbSUyMGludGVyaW9yJTIwZGVzaWduJTIwd2FybXxlbnwxfHx8fDE3NzgyMjY5Mjl8MA&ixlib=rb-4.1.0&q=80&w=1080";
@@ -68,10 +69,12 @@ export function Home() {
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  
+  const { data: listings = [], isLoading } = useListings();
 
   const filtered = activeFilter === 'All'
-    ? properties.slice(0, 8)
-    : properties.filter(p =>
+    ? listings.slice(0, 8)
+    : listings.filter(p =>
         p.type?.toLowerCase().includes(activeFilter.toLowerCase()) ||
         p.category?.toLowerCase().includes(activeFilter.toLowerCase())
       ).slice(0, 8);
@@ -181,7 +184,18 @@ export function Home() {
             </Link>
           </div>
 
-          {filtered.length === 0 ? (
+          {isLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-10">
+              {[...Array(8)].map((_, i) => (
+                <div key={i} className="animate-pulse">
+                  <div className="bg-[#F0F0F0] rounded-2xl mb-3" style={{ aspectRatio: '4/3' }} />
+                  <div className="h-4 bg-[#F0F0F0] rounded mb-2 w-3/4" />
+                  <div className="h-3 bg-[#F0F0F0] rounded mb-2 w-1/2" />
+                  <div className="h-3 bg-[#F0F0F0] rounded w-1/3" />
+                </div>
+              ))}
+            </div>
+          ) : filtered.length === 0 ? (
             <p className="text-center py-16" style={{ color: '#8E8E93' }}>No listings found for this filter.</p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-10">

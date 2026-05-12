@@ -54,7 +54,7 @@ export function HostDashboard() {
           </h1>
           <p className="text-[#717171] text-sm">Welcome back, Jean Pierre! Here's your property overview.</p>
         </div>
-        <Link to="/host/add-listing" className="flex items-center gap-2 bg-[#FF385C] hover:bg-[#E31C5F] text-white px-5 py-2.5 rounded-xl font-semibold text-sm transition-colors">
+        <Link to="/dashboard/add-listing" className="flex items-center gap-2 bg-[#FF385C] hover:bg-[#E31C5F] text-white px-5 py-2.5 rounded-xl font-semibold text-sm transition-colors">
           + Add Property
         </Link>
       </div>
@@ -139,7 +139,7 @@ export function HostDashboard() {
         <div className="lg:col-span-2 bg-white rounded-2xl border border-[#EBEBEB] overflow-hidden">
           <div className="flex items-center justify-between p-6 border-b border-[#EBEBEB]">
             <h2 className="text-[#222222] font-semibold" style={{ fontFamily: "'Poppins', sans-serif" }}>My Properties</h2>
-            <Link to="/host/listings" className="text-[#FF385C] text-sm font-medium hover:underline flex items-center gap-1">
+            <Link to="/dashboard/listings" className="text-[#FF385C] text-sm font-medium hover:underline flex items-center gap-1">
               View all <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
@@ -206,7 +206,7 @@ export function HostDashboard() {
         <div className="bg-white rounded-2xl border border-[#EBEBEB] overflow-hidden">
           <div className="flex items-center justify-between p-5 border-b border-[#EBEBEB]">
             <h2 className="text-[#222222] font-semibold text-sm" style={{ fontFamily: "'Poppins', sans-serif" }}>Recent Reservations</h2>
-            <Link to="/host/bookings" className="text-[#FF385C] text-xs font-medium hover:underline">View all</Link>
+            <Link to="/dashboard/bookings" className="text-[#FF385C] text-xs font-medium hover:underline">View all</Link>
           </div>
           <div className="divide-y divide-[#EBEBEB]">
             {bookings.slice(0, 4).map(booking => (

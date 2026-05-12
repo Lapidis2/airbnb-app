@@ -1,12 +1,15 @@
 import { useState, useCallback, memo } from 'react';
 import { useNavigate } from 'react-router';
 import { Upload, MapPin, DollarSign, Users, Bed, Bath, Check, ArrowRight, ArrowLeft } from 'lucide-react';
+import { toast } from 'sonner';
+import { ConfirmModal } from '../../components/shared/ConfirmModal';
 
 const STEPS = ['Basic Info', 'Location', 'Details', 'Amenities', 'Photos', 'Pricing'];
 
 export function AddListing() {
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
+  const [showPublishModal, setShowPublishModal] = useState(false);
   const [form, setForm] = useState({
     title: '', type: 'Apartment', location: '', address: '',
     guests: '2', bedrooms: '1', beds: '1', baths: '1',
@@ -20,7 +23,10 @@ export function AddListing() {
     amenities: prev.amenities.includes(a) ? prev.amenities.filter(x => x !== a) : [...prev.amenities, a]
   })), []);
 
-  const handleSubmit = useCallback(() => navigate('/host/listings'), [navigate]);
+  const handleSubmit = useCallback(() => {
+    toast.success('Property published successfully!');
+    navigate('/dashboard/listings');
+  }, [navigate]);
 
   const handleTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setForm(prev => ({ ...prev, title: e.target.value }));
@@ -207,12 +213,26 @@ export function AddListing() {
             Continue <ArrowRight className="w-4 h-4" />
           </button>
         ) : (
-          <button onClick={handleSubmit} className="flex items-center gap-2 bg-[#FF385C] hover:bg-[#E31C5F] text-white px-8 py-3 rounded-xl text-sm font-semibold transition-colors">
+          <button
+            onClick={() => setShowPublishModal(true)}
+            className="flex items-center gap-2 bg-[#FF385C] hover:bg-[#E31C5F] text-white px-8 py-3 rounded-xl text-sm font-semibold transition-colors"
+          >
             <Check className="w-4 h-4" />
             Publish Listing
           </button>
         )}
       </div>
+
+      <ConfirmModal
+        isOpen={showPublishModal}
+        onClose={() => setShowPublishModal(false)}
+        onConfirm={handleSubmit}
+        title="Publish Property"
+        message={`Ready to publish "${form.title || 'your property'}"? Once published, it will be visible to guests and available for booking.`}
+        confirmText="Publish now"
+        cancelText="Review details"
+        type="info"
+      />
     </div>
   );
 }

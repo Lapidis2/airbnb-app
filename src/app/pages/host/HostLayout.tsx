@@ -7,15 +7,15 @@ import {
 import { useState, useRef, useEffect } from 'react';
 
 const navItems = [
-  { label: 'Dashboard',   path: '/host/dashboard',    icon: LayoutDashboard },
-  { label: 'My Listings', path: '/host/listings',     icon: Home },
-  { label: 'Add Property',path: '/host/add-listing',  icon: Plus },
-  { label: 'Reservations',path: '/host/bookings',     icon: Calendar,      badge: '3' },
-  { label: 'Earnings',    path: '/host/earnings',     icon: DollarSign },
-  { label: 'Reviews',     path: '/host/reviews',      icon: Star },
-  { label: 'Messages',    path: '/host/messages',     icon: MessageCircle },
-  { label: 'Profile',     path: '/host/profile',      icon: User },
-  { label: 'Settings',    path: '/host/settings',     icon: Settings },
+  { label: 'Dashboard',   path: '/dashboard',                icon: LayoutDashboard },
+  { label: 'My Listings', path: '/dashboard/listings',       icon: Home },
+  { label: 'Add Property',path: '/dashboard/add-listing',    icon: Plus },
+  { label: 'Reservations',path: '/dashboard/bookings',       icon: Calendar,      badge: '3' },
+  { label: 'Earnings',    path: '/dashboard/earnings',       icon: DollarSign },
+  { label: 'Reviews',     path: '/dashboard/reviews',        icon: Star },
+  { label: 'Messages',    path: '/dashboard/messages',       icon: MessageCircle },
+  { label: 'Profile',     path: '/dashboard/profile',        icon: User },
+  { label: 'Settings',    path: '/dashboard/settings',       icon: Settings },
 ];
 
 const mockNotifications = [
@@ -270,7 +270,7 @@ export function HostLayout() {
 
             {/* Profile avatar — branded */}
             <Link
-              to="/host/profile"
+              to="/dashboard/profile"
               className="flex items-center gap-2 rounded-xl px-3 py-2 transition-colors border border-[#FFD4D8]"
               style={{ backgroundColor: '#FFF1F3' }}
               onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#FFE4E8')}

@@ -1,17 +1,26 @@
 import { useState } from 'react';
 import { Search, CheckCircle, XCircle, Eye, MapPin, Star } from 'lucide-react';
+import { toast } from 'sonner';
 import { properties } from '../../../data/mockData';
 import { Pagination } from '../../components/shared/Pagination';
 import { usePagination } from '../../components/shared/usePagination';
+import { ConfirmModal } from '../../components/shared/ConfirmModal';
 
 export function AdminListings() {
   const [search, setSearch] = useState('');
   const [listingStatuses, setListingStatuses] = useState<Record<string, 'approved' | 'pending' | 'rejected'>>({
     '1': 'approved', '2': 'approved', '3': 'approved', '4': 'pending', '5': 'approved', '6': 'pending', '7': 'rejected', '8': 'pending'
   });
+  const [actionModal, setActionModal] = useState<{ id: string; title: string; action: 'approve' | 'reject' } | null>(null);
 
-  const approve = (id: string) => setListingStatuses(prev => ({ ...prev, [id]: 'approved' }));
-  const reject  = (id: string) => setListingStatuses(prev => ({ ...prev, [id]: 'rejected' }));
+  const approve = (id: string) => {
+    setListingStatuses(prev => ({ ...prev, [id]: 'approved' }));
+    toast.success('Listing approved successfully');
+  };
+  const reject  = (id: string) => {
+    setListingStatuses(prev => ({ ...prev, [id]: 'rejected' }));
+    toast.success('Listing rejected');
+  };
 
   const filtered = properties.filter(p =>
     p.title.toLowerCase().includes(search.toLowerCase()) || p.location.toLowerCase().includes(search.toLowerCase())
@@ -69,12 +78,18 @@ export function AdminListings() {
                 <p className="text-[#717171] text-xs mb-4 line-clamp-2">{property.description}</p>
                 <div className="flex items-center gap-2">
                   {status !== 'approved' && (
-                    <button onClick={() => approve(property.id)} className="flex-1 flex items-center justify-center gap-1.5 bg-green-50 hover:bg-green-100 text-green-700 py-2.5 rounded-xl text-xs font-semibold transition-colors">
+                    <button
+                      onClick={() => setActionModal({ id: property.id, title: property.title, action: 'approve' })}
+                      className="flex-1 flex items-center justify-center gap-1.5 bg-green-50 hover:bg-green-100 text-green-700 py-2.5 rounded-xl text-xs font-semibold transition-colors"
+                    >
                       <CheckCircle className="w-3.5 h-3.5" /> Approve
                     </button>
                   )}
                   {status !== 'rejected' && (
-                    <button onClick={() => reject(property.id)} className="flex-1 flex items-center justify-center gap-1.5 bg-red-50 hover:bg-red-100 text-red-600 py-2.5 rounded-xl text-xs font-semibold transition-colors">
+                    <button
+                      onClick={() => setActionModal({ id: property.id, title: property.title, action: 'reject' })}
+                      className="flex-1 flex items-center justify-center gap-1.5 bg-red-50 hover:bg-red-100 text-red-600 py-2.5 rounded-xl text-xs font-semibold transition-colors"
+                    >
                       <XCircle className="w-3.5 h-3.5" /> Reject
                     </button>
                   )}
@@ -101,6 +116,28 @@ export function AdminListings() {
         perPageOptions={[4, 6, 9]}
         itemLabel="listings"
         className="border-t border-[#EBEBEB] pt-6"
+      />
+
+      <ConfirmModal
+        isOpen={!!actionModal}
+        onClose={() => setActionModal(null)}
+        onConfirm={() => {
+          if (actionModal?.action === 'approve') {
+            approve(actionModal.id);
+          } else {
+            reject(actionModal!.id);
+          }
+          setActionModal(null);
+        }}
+        title={actionModal?.action === 'approve' ? 'Approve Listing' : 'Reject Listing'}
+        message={
+          actionModal?.action === 'approve'
+            ? `Approve "${actionModal?.title}"? It will be visible to all guests and available for booking.`
+            : `Reject "${actionModal?.title}"? The host will be notified and the listing will not be published.`
+        }
+        confirmText={actionModal?.action === 'approve' ? 'Approve' : 'Reject'}
+        cancelText="Cancel"
+        type={actionModal?.action === 'approve' ? 'info' : 'danger'}
       />
     </div>
   );

@@ -1,9 +1,12 @@
+import { useState } from 'react';
 import { Link } from 'react-router';
 import { MapPin, Calendar } from 'lucide-react';
+import { toast } from 'sonner';
 import { bookings } from '../../../data/mockData';
 import { Pagination } from '../../components/shared/Pagination';
 import { usePagination } from '../../components/shared/usePagination';
 import { UserPageLayout } from '../../components/layout/UserPageLayout';
+import { ConfirmModal } from '../../components/shared/ConfirmModal';
 
 const statusConfig: Record<string, { color: string; bg: string; label: string }> = {
   confirmed: { color: '#16a34a', bg: '#dcfce7', label: 'Confirmed' },
@@ -13,6 +16,7 @@ const statusConfig: Record<string, { color: string; bg: string; label: string }>
 };
 
 export function UserBookings() {
+  const [cancelModal, setCancelModal] = useState<{ id: string; title: string } | null>(null);
   const { currentPage, totalPages, perPage, paginatedItems, totalItems, onPageChange, onPerPageChange } =
     usePagination(bookings, { defaultPerPage: 4 });
 
@@ -54,7 +58,12 @@ export function UserBookings() {
                       <button className="text-[#717171] text-sm hover:text-[#222222] transition-colors">Write Review</button>
                     )}
                     {booking.status === 'confirmed' && (
-                      <button className="text-sm text-[#717171] hover:text-red-500 transition-colors">Cancel</button>
+                      <button
+                        onClick={() => setCancelModal({ id: booking.id, title: booking.propertyTitle })}
+                        className="text-sm text-[#717171] hover:text-red-500 transition-colors"
+                      >
+                        Cancel
+                      </button>
                     )}
                   </div>
                 </div>
@@ -75,6 +84,20 @@ export function UserBookings() {
         perPageOptions={[3, 4, 6]}
         itemLabel="bookings"
         className="border-t border-[#EBEBEB] pt-6"
+      />
+
+      <ConfirmModal
+        isOpen={!!cancelModal}
+        onClose={() => setCancelModal(null)}
+        onConfirm={() => {
+          toast.success(`Booking for ${cancelModal?.title} has been cancelled`);
+          setCancelModal(null);
+        }}
+        title="Cancel Booking"
+        message={`Are you sure you want to cancel your booking at "${cancelModal?.title}"? You may be charged a cancellation fee depending on the property's policy.`}
+        confirmText="Cancel booking"
+        cancelText="Keep booking"
+        type="danger"
       />
     </UserPageLayout>
   );

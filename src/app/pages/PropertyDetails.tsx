@@ -1,14 +1,36 @@
 import { useParams, Link, useNavigate } from 'react-router';
 import { Navbar } from '../components/layout/Navbar';
-import { properties } from '../../data/mockData';
 import { Star, Users, Bed, Bath, Wifi, Car, Wind, Utensils, MapPin, Share, Heart, ChevronLeft, Check, ArrowRight } from 'lucide-react';
+import { useListing } from '../../features/listings/hooks';
 
 export function PropertyDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const property = properties.find((p) => p.id === id);
+  const { data: property, isLoading, isError } = useListing(id!);
 
-  if (!property) {
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-white">
+        <Navbar />
+        <div className="max-w-[1280px] mx-auto px-6 lg:px-12 py-12">
+          <div className="animate-pulse space-y-6">
+            <div className="h-8 bg-[#F0F0F0] rounded w-1/3" />
+            <div className="h-[460px] bg-[#F0F0F0] rounded-2xl" />
+            <div className="grid grid-cols-3 gap-6">
+              <div className="col-span-2 space-y-4">
+                <div className="h-6 bg-[#F0F0F0] rounded w-1/2" />
+                <div className="h-4 bg-[#F0F0F0] rounded w-full" />
+                <div className="h-4 bg-[#F0F0F0] rounded w-3/4" />
+              </div>
+              <div className="h-64 bg-[#F0F0F0] rounded-2xl" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (isError || !property) {
     return (
       <div className="min-h-screen bg-white">
         <Navbar />

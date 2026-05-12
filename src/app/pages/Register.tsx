@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
-import { useMutation } from '@tanstack/react-query';
 import { Eye, EyeOff, ArrowLeft, Check } from 'lucide-react';
-import { register } from '../services/auth';
+import { useRegister } from '../../features/auth/hooks';
 import { useAuth } from '../context/AuthContext';
 
 const SIDE_IMG = "https://images.unsplash.com/photo-1775866914767-7e4646f2481a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsdXh1cnklMjBob3RlbCUyMHJvb20lMjBwcmVtaXVtJTIwaW50ZXJpb3J8ZW58MXx8fHwxNzc4MDYxNzk0fDA&ixlib=rb-4.1.0&q=80&w=1080";
@@ -11,90 +10,57 @@ export function Register() {
   const navigate = useNavigate();
   const { login: authLogin } = useAuth();
   const [searchParams] = useSearchParams();
-  const [fullName, setFullName] = useState('');
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [showPw, setShowPw] = useState(false);
-  const [showCpw, setShowCpw] = useState(false);
-  const [role, setRole] = useState<'guest' | 'host' | 'admin'>('guest');
-  const [agreed, setAgreed] = useState(false);
 
-  // Set initial role based on URL parameter
+  const [fullName,         setFullName]         = useState('');
+  const [username,         setUsername]         = useState('');
+  const [email,            setEmail]            = useState('');
+  const [phone,            setPhone]            = useState('');
+  const [password,         setPassword]         = useState('');
+  const [confirmPassword,  setConfirmPassword]  = useState('');
+  const [showPw,           setShowPw]           = useState(false);
+  const [showCpw,          setShowCpw]          = useState(false);
+  const [role,             setRole]             = useState<'guest' | 'host'>('guest');
+  const [agreed,           setAgreed]           = useState(false);
+  const [pwMismatch,       setPwMismatch]       = useState(false);
+
   useEffect(() => {
-    const roleParam = searchParams.get('role');
-    if (roleParam === 'host') {
-      setRole('host');
-    } else if (roleParam === 'admin') {
-      setRole('admin');
-    } else {
-      setRole('guest');
-    }
+    const r = searchParams.get('role');
+    if (r === 'host') setRole('host');
+    else setRole('guest');
   }, [searchParams]);
 
-  const registerMutation = useMutation({
-    mutationFn: register,
-    onSuccess: (data, variables) => {
-      console.log('Registration response:', data); 
-
-    
-      const { user, token } = data.data;
-
-      if (user && user.id && user.email && user.name && user.role) {
-        authLogin(user);
-      }
-
-      if (token) {
-        localStorage.setItem('token', token);
-      }
-
-      
-      navigate('/signin');
-    },
-    onError: (error: any) => {
-      console.error('Registration failed:', error);
-
-      if (error.message?.includes('400')) {
-        alert('Please fill in all required fields correctly.');
-      } else if (error.message?.includes('409')) {
-        alert('User already exists with this email or username.');
-      } else if (error.message?.includes('500')) {
-        alert('Server error. Please try again later.');
-      } else {
-        alert('Registration failed. Please try again.');
-      }
-    },
-  });
-
-  const handleRegister = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (password !== confirmPassword) {
-      alert('Passwords do not match');
-      return;
-    }
-    const roleUppercase = role.toUpperCase() as 'GUEST' | 'HOST' | 'ADMIN';
-    registerMutation.mutate({ name: fullName, username, email, phone, password, role: roleUppercase });
-  };
+  const registerMutation = useRegister();
 
   const passwordStrength = () => {
     if (!password) return 0;
-    let strength = 0;
-    if (password.length >= 8) strength++;
-    if (/[A-Z]/.test(password)) strength++;
-    if (/[0-9]/.test(password)) strength++;
-    if (/[^A-Za-z0-9]/.test(password)) strength++;
-    return strength;
+    let s = 0;
+    if (password.length >= 8) s++;
+    if (/[A-Z]/.test(password)) s++;
+    if (/[0-9]/.test(password)) s++;
+    if (/[^A-Za-z0-9]/.test(password)) s++;
+    return s;
   };
-
   const strength = passwordStrength();
   const strengthLabel = ['', 'Weak', 'Fair', 'Good', 'Strong'][strength];
   const strengthColor = ['', '#ef4444', '#f97316', '#22c55e', '#16a34a'][strength];
 
+  const handleRegister = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password !== confirmPassword) { setPwMismatch(true); return; }
+    setPwMismatch(false);
+    registerMutation.mutate(
+      { name: fullName, username, email, phone, password, role: role.toUpperCase() as 'GUEST' | 'HOST' },
+      {
+        onSuccess: (res) => {
+          authLogin(res.data.user);
+          navigate('/signin');
+        },
+      }
+    );
+  };
+
   return (
     <div className="min-h-screen bg-white flex" style={{ fontFamily: "'Inter', sans-serif" }}>
-      {/* Right side image (shown on left for register) */}
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden order-last">
         <img src={SIDE_IMG} alt="StayBnb" className="w-full h-full object-cover" />
         <div className="absolute inset-0" style={{ background: 'linear-gradient(to top left, rgba(0,166,153,0.9), rgba(34,34,34,0.85))' }} />
@@ -126,7 +92,6 @@ export function Register() {
         </div>
       </div>
 
-      {/* Left Form Panel */}
       <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 md:px-16 lg:px-20 py-12 overflow-y-auto">
         <div className="max-w-md w-full mx-auto">
           <Link to="/" className="flex items-center gap-2 text-[#717171] hover:text-[#222222] transition-colors text-sm mb-8">
@@ -144,27 +109,22 @@ export function Register() {
           <h1 className="text-[#222222] mb-2" style={{ fontFamily: "'Poppins', sans-serif", fontSize: '2rem', fontWeight: 700 }}>Create Account</h1>
           <p className="text-[#717171] text-sm mb-8">Join StayBnb and start your travel journey today.</p>
 
-          {/* Role selector */}
-          <div className="grid grid-cols-3 gap-3 mb-8">
+          <div className="grid grid-cols-2 gap-3 mb-8">
             {[
-              { value: 'guest', emoji: '', title: 'I\'m a Guest', desc: 'Looking for unique stays' },
-              { value: 'host', emoji: '', title: 'I\'m a Host', desc: 'Want to earn from my property' },
-            
+              { value: 'guest', title: "I'm a Guest", desc: 'Looking for unique stays' },
+              { value: 'host',  title: "I'm a Host",  desc: 'Want to earn from my property' },
             ].map(r => (
               <button
                 key={r.value}
-                onClick={() => setRole(r.value as 'guest' | 'host' )}
+                onClick={() => setRole(r.value as 'guest' | 'host')}
                 className="flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all"
                 style={{
                   borderColor: role === r.value ? '#FF385C' : '#DDDDDD',
-                  background: role === r.value ? '#FFF1F3' : 'white'
+                  background:  role === r.value ? '#FFF1F3' : 'white',
                 }}
               >
-                <span className="text-2xl">{r.emoji}</span>
-                <span className="text-sm font-semibold capitalize" style={{ color: role === r.value ? '#FF385C' : '#222222' }}>{r.title}</span>
-                <span className="text-xs text-center" style={{ color: '#717171' }}>
-                  {r.desc}
-                </span>
+                <span className="text-sm font-semibold" style={{ color: role === r.value ? '#FF385C' : '#222222' }}>{r.title}</span>
+                <span className="text-xs text-center" style={{ color: '#717171' }}>{r.desc}</span>
               </button>
             ))}
           </div>
@@ -172,59 +132,29 @@ export function Register() {
           <form onSubmit={handleRegister} className="space-y-5">
             <div>
               <label className="block text-[#222222] text-sm font-semibold mb-2">Full Name</label>
-              <input
-                type="text"
-                value={fullName}
-                onChange={e => setFullName(e.target.value)}
-                placeholder="John Smith"
-                className="w-full px-4 py-3.5 rounded-xl border border-[#DDDDDD] bg-white text-[#222222] text-sm outline-none focus:border-[#FF385C] transition-colors placeholder:text-[#AAAAAA]"
-                required
-              />
+              <input type="text" value={fullName} onChange={e => setFullName(e.target.value)} placeholder="John Smith"
+                className="w-full px-4 py-3.5 rounded-xl border border-[#DDDDDD] bg-white text-[#222222] text-sm outline-none focus:border-[#FF385C] transition-colors placeholder:text-[#AAAAAA]" required />
             </div>
             <div>
               <label className="block text-[#222222] text-sm font-semibold mb-2">Username</label>
-              <input
-                type="text"
-                value={username}
-                onChange={e => setUsername(e.target.value)}
-                placeholder="johndoe123"
-                className="w-full px-4 py-3.5 rounded-xl border border-[#DDDDDD] bg-white text-[#222222] text-sm outline-none focus:border-[#FF385C] transition-colors placeholder:text-[#AAAAAA]"
-                required
-              />
+              <input type="text" value={username} onChange={e => setUsername(e.target.value)} placeholder="johndoe123"
+                className="w-full px-4 py-3.5 rounded-xl border border-[#DDDDDD] bg-white text-[#222222] text-sm outline-none focus:border-[#FF385C] transition-colors placeholder:text-[#AAAAAA]" required />
             </div>
             <div>
               <label className="block text-[#222222] text-sm font-semibold mb-2">Phone Number</label>
-              <input
-                type="tel"
-                value={phone}
-                onChange={e => setPhone(e.target.value)}
-                placeholder="07859346666"
-                className="w-full px-4 py-3.5 rounded-xl border border-[#DDDDDD] bg-white text-[#222222] text-sm outline-none focus:border-[#FF385C] transition-colors placeholder:text-[#AAAAAA]"
-                required
-              />
+              <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="07859346666"
+                className="w-full px-4 py-3.5 rounded-xl border border-[#DDDDDD] bg-white text-[#222222] text-sm outline-none focus:border-[#FF385C] transition-colors placeholder:text-[#AAAAAA]" required />
             </div>
             <div>
               <label className="block text-[#222222] text-sm font-semibold mb-2">Email Address</label>
-              <input
-                type="email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                placeholder="your@email.com"
-                className="w-full px-4 py-3.5 rounded-xl border border-[#DDDDDD] bg-white text-[#222222] text-sm outline-none focus:border-[#FF385C] transition-colors placeholder:text-[#AAAAAA]"
-                required
-              />
+              <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="your@email.com"
+                className="w-full px-4 py-3.5 rounded-xl border border-[#DDDDDD] bg-white text-[#222222] text-sm outline-none focus:border-[#FF385C] transition-colors placeholder:text-[#AAAAAA]" required />
             </div>
             <div>
               <label className="block text-[#222222] text-sm font-semibold mb-2">Password</label>
               <div className="relative">
-                <input
-                  type={showPw ? 'text' : 'password'}
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  placeholder="Create a strong password"
-                  className="w-full px-4 py-3.5 rounded-xl border border-[#DDDDDD] bg-white text-[#222222] text-sm outline-none focus:border-[#FF385C] transition-colors placeholder:text-[#AAAAAA] pr-12"
-                  required
-                />
+                <input type={showPw ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} placeholder="Create a strong password"
+                  className="w-full px-4 py-3.5 rounded-xl border border-[#DDDDDD] bg-white text-[#222222] text-sm outline-none focus:border-[#FF385C] transition-colors placeholder:text-[#AAAAAA] pr-12" required />
                 <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#717171] hover:text-[#222222]">
                   {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -243,14 +173,8 @@ export function Register() {
             <div>
               <label className="block text-[#222222] text-sm font-semibold mb-2">Confirm Password</label>
               <div className="relative">
-                <input
-                  type={showCpw ? 'text' : 'password'}
-                  value={confirmPassword}
-                  onChange={e => setConfirmPassword(e.target.value)}
-                  placeholder="Repeat your password"
-                  className="w-full px-4 py-3.5 rounded-xl border border-[#DDDDDD] bg-white text-[#222222] text-sm outline-none focus:border-[#FF385C] transition-colors placeholder:text-[#AAAAAA] pr-12"
-                  required
-                />
+                <input type={showCpw ? 'text' : 'password'} value={confirmPassword} onChange={e => { setConfirmPassword(e.target.value); setPwMismatch(false); }} placeholder="Repeat your password"
+                  className={`w-full px-4 py-3.5 rounded-xl border bg-white text-[#222222] text-sm outline-none transition-colors placeholder:text-[#AAAAAA] pr-12 ${pwMismatch ? 'border-red-400 focus:border-red-400' : 'border-[#DDDDDD] focus:border-[#FF385C]'}`} required />
                 <button type="button" onClick={() => setShowCpw(!showCpw)} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#717171] hover:text-[#222222]">
                   {showCpw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -260,6 +184,7 @@ export function Register() {
                   </div>
                 )}
               </div>
+              {pwMismatch && <p className="text-xs text-red-500 mt-1">Passwords do not match.</p>}
             </div>
 
             <div className="flex items-start gap-2">
@@ -275,9 +200,14 @@ export function Register() {
             <button
               type="submit"
               disabled={registerMutation.isPending}
-              className="w-full bg-[#FF385C] hover:bg-[#E31C5F] disabled:opacity-50 disabled:cursor-not-allowed text-white py-4 rounded-xl font-semibold text-sm transition-colors"
+              className="w-full bg-[#FF385C] hover:bg-[#E31C5F] disabled:opacity-60 disabled:cursor-not-allowed text-white py-4 rounded-xl font-semibold text-sm transition-colors flex items-center justify-center gap-2"
             >
-              {registerMutation.isPending ? 'Creating Account...' : 'Create Account'}
+              {registerMutation.isPending ? (
+                <>
+                  <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                  Creating Account…
+                </>
+              ) : 'Create Account'}
             </button>
           </form>
 

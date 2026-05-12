@@ -12,6 +12,7 @@ import { Pagination } from '../components/shared/Pagination';
 import { usePagination } from '../components/shared/usePagination';
 import { useWishlist } from '../context/WishlistContext';
 import { useAuth } from '../context/AuthContext';
+import { useListings, useSearchListings } from '../../features/listings/hooks';
 
 type Property = typeof properties[0] & { lat?: number; lng?: number };
 
@@ -564,9 +565,11 @@ function ListingsGrid() {
   const [maxPrice,    setMaxPrice]    = useState(500);
   const [showFilters, setShowFilters] = useState(false);
   const [filterState, setFilterState] = useState<FilterState>(DEFAULT_FILTERS);
+  
+  const { data: apiListings = [], isLoading } = useListings();
 
   const filtered = useMemo(() => {
-    return (properties as Property[]).filter(p => {
+    return apiListings.filter(p => {
       const q = search.toLowerCase();
       if (search && !p.title.toLowerCase().includes(q) && !p.location.toLowerCase().includes(q)) return false;
       if (selected !== 'All' && p.category !== selected && p.type !== selected) return false;
@@ -576,7 +579,7 @@ function ListingsGrid() {
       if (filterState.amenities.length > 0 && !filterState.amenities.every(a => p.amenities.includes(a))) return false;
       return true;
     });
-  }, [search, selected, maxPrice, filterState]);
+  }, [search, selected, maxPrice, filterState, apiListings]);
 
   const { currentPage, totalPages, perPage, paginatedItems, totalItems, onPageChange, onPerPageChange } =
     usePagination(filtered, { defaultPerPage: 6 });
@@ -671,7 +674,20 @@ function ListingsGrid() {
         </div>
 
         {/* Grid */}
-        {filtered.length === 0 ? (
+        {isLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-10">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="animate-pulse bg-white rounded-2xl border border-[#EBEBEB] overflow-hidden">
+                <div className="bg-[#F0F0F0]" style={{ aspectRatio: '4/3' }} />
+                <div className="p-4 space-y-3">
+                  <div className="h-4 bg-[#F0F0F0] rounded w-3/4" />
+                  <div className="h-3 bg-[#F0F0F0] rounded w-1/2" />
+                  <div className="h-3 bg-[#F0F0F0] rounded w-2/3" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : filtered.length === 0 ? (
           <div className="text-center py-20">
             <p className="text-lg" style={{ color: '#717171' }}>No properties found.</p>
           </div>

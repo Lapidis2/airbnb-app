@@ -1,62 +1,43 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router';
-import { useMutation } from '@tanstack/react-query';
 import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
-import { login } from '../services/auth';
+import { useLogin } from '../../features/auth/hooks';
 import { useAuth } from '../context/AuthContext';
 
 const SIDE_IMG = "https://images.unsplash.com/photo-1705321963943-de94bb3f0dd3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtb2Rlcm4lMjBsaXZpbmclMjByb29tJTIwaW50ZXJpb3IlMjBkZXNpZ258ZW58MXx8fHwxNzc4MDUzNjkzfDA&ixlib=rb-4.1.0&q=80&w=1080";
 
 export function SignIn() {
-  const navigate = useNavigate();
-  const location = useLocation();
+  const navigate  = useNavigate();
+  const location  = useLocation();
   const { login: authLogin } = useAuth();
-
   const from = location.state?.from?.pathname || '/';
-  const [email, setEmail] = useState('');
+
+  const [email,    setEmail]    = useState('');
   const [password, setPassword] = useState('');
-  const [showPw, setShowPw] = useState(false);
+  const [showPw,   setShowPw]   = useState(false);
   const [remember, setRemember] = useState(false);
-  const [role, setRole] = useState<'guest' | 'host' | 'admin'>('guest');
+  const [role,     setRole]     = useState<'guest' | 'host'>('guest');
 
-  const loginMutation = useMutation({
-    mutationFn: login,
-    onSuccess: (data, variables) => {
-      const { user, token } = data.data;
-
-      if (user && token) {
-        localStorage.setItem('token', token);
-        authLogin(user);
-
-        if (from && from !== '/' && from !== '/signin') {
-          navigate(from, { replace: true });
-        } else {
-          if (user?.role === 'HOST') navigate('/dashboard');
-          else if (user?.role === 'ADMIN') navigate('/dashboard');
-          else navigate('/');
-        }
-      }
-    },
-    onError: (error: any) => {
-      console.error('Login failed:', error);
-
-      // Show specific error messages
-      if (error.message?.includes('400')) {
-        alert('Invalid credentials. Please check your email and password.');
-      } else if (error.message?.includes('401')) {
-        alert('Unauthorized. Please check your credentials.');
-      } else if (error.message?.includes('403')) {
-        alert('Access forbidden. You may not have permission to access this role.');
-      } else {
-        alert('Login failed. Please try again.');
-      }
-    },
-  });
+  const loginMutation = useLogin();
 
   const handleSignIn = (e: React.FormEvent) => {
     e.preventDefault();
-    const roleUppercase = role.toUpperCase() as 'GUEST' | 'HOST' | 'ADMIN';
-    loginMutation.mutate({ email, password, role: roleUppercase });
+    loginMutation.mutate(
+      { email, password, role: role.toUpperCase() as 'GUEST' | 'HOST' | 'ADMIN' },
+      {
+        onSuccess: (res) => {
+          const { user } = res.data;
+          authLogin(user);
+          if (from && from !== '/' && from !== '/signin') {
+            navigate(from, { replace: true });
+          } else if (user.role === 'HOST' || user.role === 'ADMIN') {
+            navigate('/dashboard');
+          } else {
+            navigate('/');
+          }
+        },
+      }
+    );
   };
 
   return (
@@ -94,13 +75,11 @@ export function SignIn() {
       {/* Right Form Panel */}
       <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 md:px-16 lg:px-20 py-12 overflow-y-auto">
         <div className="max-w-md w-full mx-auto">
-          {/* Back link */}
           <Link to="/" className="flex items-center gap-2 text-[#717171] hover:text-[#222222] transition-colors text-sm mb-8">
             <ArrowLeft className="w-4 h-4" />
             Back to Home
           </Link>
 
-          {/* Mobile logo */}
           <div className="flex items-center gap-2 mb-8 lg:hidden">
             <div className="w-8 h-8 bg-[#FF385C] rounded-xl flex items-center justify-center">
               <span className="text-white font-bold text-sm">S</span>
@@ -111,25 +90,21 @@ export function SignIn() {
           <h1 className="text-[#222222] mb-2" style={{ fontFamily: "'Poppins', sans-serif", fontSize: '2rem', fontWeight: 700 }}>Welcome Back</h1>
           <p className="text-[#717171] text-sm mb-8">Sign in to access your account and bookings.</p>
 
-        <div
-  className="grid grid-cols-2 gap-2 mb-8 p-1 rounded-xl"
-  style={{ background: '#F7F7F7' }}
->
-  {(['guest', 'host'] as const).map((r) => (
-    <button
-      key={r}
-      onClick={() => setRole(r)}
-      className="py-2.5 rounded-lg text-sm font-semibold capitalize transition-all"
-      style={{
-        background: role === r ? '#FF385C' : 'transparent',
-        color: role === r ? 'white' : '#717171',
-      }}
-    >
-      {r === 'guest' ? 'Guest' : 'Host'}
-    </button>
-  ))}
-</div>
-        
+          <div className="grid grid-cols-2 gap-2 mb-8 p-1 rounded-xl" style={{ background: '#F7F7F7' }}>
+            {(['guest', 'host'] as const).map((r) => (
+              <button
+                key={r}
+                onClick={() => setRole(r)}
+                className="py-2.5 rounded-lg text-sm font-semibold capitalize transition-all"
+                style={{
+                  background: role === r ? '#FF385C' : 'transparent',
+                  color: role === r ? 'white' : '#717171',
+                }}
+              >
+                {r === 'guest' ? 'Guest' : 'Host'}
+              </button>
+            ))}
+          </div>
 
           <form onSubmit={handleSignIn} className="space-y-5">
             <div>
@@ -169,9 +144,14 @@ export function SignIn() {
             <button
               type="submit"
               disabled={loginMutation.isPending}
-              className="w-full bg-[#FF385C] hover:bg-[#E31C5F] disabled:opacity-50 disabled:cursor-not-allowed text-white py-4 rounded-xl font-semibold text-sm transition-colors"
+              className="w-full bg-[#FF385C] hover:bg-[#E31C5F] disabled:opacity-60 disabled:cursor-not-allowed text-white py-4 rounded-xl font-semibold text-sm transition-colors flex items-center justify-center gap-2"
             >
-              {loginMutation.isPending ? 'Signing In...' : 'Sign In'}
+              {loginMutation.isPending ? (
+                <>
+                  <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                  Signing In…
+                </>
+              ) : 'Sign In'}
             </button>
           </form>
 
