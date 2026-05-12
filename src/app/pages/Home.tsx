@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { Navbar } from '../components/layout/Navbar';
 import { HeroSearch } from '../components/shared/HeroSearch';
+import { AISearch } from '../components/shared/AISearch';
 import { properties, testimonials } from '../../data/mockData';
 import { useWishlist } from '../context/WishlistContext';
 import { useAuth } from '../context/AuthContext';
@@ -106,6 +107,7 @@ export function Home() {
 
             
               <HeroSearch  />
+              <AISearch />
 
           
               <div className="flex items-center gap-6 mt-8 flex-wrap">
